@@ -3,8 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quickflows.ai — AI-Powered ACO Operations</title>
+  <title>Quickflows.ai — End-to-End ACO Operations, Powered by AI Agents</title>
+
+  <!-- Preload main poster only — sub-posters load on demand -->
+  <link rel="preload" as="image" href="images/main-poster.webp" />
+
   <style>
+
+    /* ── RESET ── */
     *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
@@ -159,7 +165,7 @@
       background: rgba(255, 255, 255, 0.16);
     }
 
-    /* ── MODAL POSTER ── */
+    /* ── MODAL POSTER WRAP ── */
 
     .modal-poster-wrap {
       position: relative;
@@ -168,6 +174,33 @@
       overflow: hidden;
       background: #080814;
       box-shadow: 0 0 0 0.5px rgba(124, 58, 237, 0.3);
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Spinner — shown via .loading class while image fetches */
+    .modal-poster-wrap.loading::after {
+      content: '';
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(124, 58, 237, 0.2);
+      border-top-color: #7c3aed;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    .modal-poster-wrap.loading .modal-poster-img {
+      display: none;
+    }
+
+    .modal-poster-wrap.loading .modal-demo-zone {
+      display: none;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
     .modal-poster-img {
@@ -175,6 +208,8 @@
       width: 100%;
       height: auto;
     }
+
+    /* ── MODAL DEMO ZONE (Schedule a Demo in each sub-poster) ── */
 
     .modal-demo-zone {
       position: absolute;
@@ -194,6 +229,7 @@
     .modal-demo-zone:hover {
       background: rgba(255, 255, 255, 0.07);
     }
+
   </style>
 </head>
 <body>
@@ -201,13 +237,14 @@
   <!-- MAIN POSTER -->
   <div class="poster-container">
     <img
-      src="images/main-poster.png"
+      src="images/main-poster.webp"
       alt="Quickflows.ai — End-to-End ACO Operations, Powered by AI Agents"
       class="poster-img"
       id="poster-img"
     />
 
-    <!-- CARD OVERLAY ZONES (6 total) -->
+    <!-- CARD OVERLAY ZONES (6 total) — positions calibrated to actual image layout -->
+
     <div class="zone" data-poster="referral"
       role="button" tabindex="0"
       aria-label="Open AI-Powered Referral Management"
@@ -244,7 +281,7 @@
       style="top:52.5%; left:67%; width:32%; height:20%;">
     </div>
 
-    <!-- DEMO CTA ZONE -->
+    <!-- DEMO CTA ZONE — calibrated to the purple button in the footer -->
     <a class="zone demo-zone"
       href="mailto:K.mcdonnell@quickflows.ai?subject=Demo%20Request%20%E2%80%94%20Quickflows.ai"
       aria-label="Schedule a demo — opens email"
@@ -261,8 +298,9 @@
         <button class="btn-close" onclick="closeModal()" aria-label="Close">✕</button>
       </div>
 
-      <div class="modal-poster-wrap">
+      <div class="modal-poster-wrap" id="poster-wrap">
         <img src="" alt="" class="modal-poster-img" id="modal-img" />
+        <!-- Demo CTA zone on each sub-poster — same position as main poster button -->
         <a class="modal-demo-zone"
           href="mailto:K.mcdonnell@quickflows.ai?subject=Demo%20Request%20%E2%80%94%20Quickflows.ai"
           aria-label="Schedule a demo — opens email">
@@ -273,22 +311,36 @@
   </div>
 
   <script>
+
     const POSTERS = {
-      'referral':    { src: 'images/referral.png',    alt: 'AI-Powered Referral Management' },
-      'health-risk': { src: 'images/health-risk.png', alt: 'Patient Health & Risk Intelligence' },
-      'cost-util':   { src: 'images/cost-util.png',   alt: 'Cost & Utilization Optimization' },
-      'care-gap':    { src: 'images/care-gap.png',    alt: 'Care Gap Closure Automation' },
-      'claims':      { src: 'images/claims.png',      alt: 'Contract & Claims Intelligence' },
-      'engagement':  { src: 'images/engagement.png',  alt: 'Patient Engagement Automation' },
+      'referral':    { src: 'images/referral.webp',    alt: 'AI-Powered Referral Management' },
+      'health-risk': { src: 'images/health-risk.webp', alt: 'Patient Health & Risk Intelligence' },
+      'cost-util':   { src: 'images/cost-util.webp',   alt: 'Cost & Utilization Optimization' },
+      'care-gap':    { src: 'images/care-gap.webp',    alt: 'Care Gap Closure Automation' },
+      'claims':      { src: 'images/claims.webp',      alt: 'Contract & Claims Intelligence' },
+      'engagement':  { src: 'images/engagement.webp',  alt: 'Patient Engagement Automation' },
     };
 
-    const modal    = document.getElementById('modal');
-    const modalImg = document.getElementById('modal-img');
-    const modalBox = document.getElementById('modal-box');
+    const modal      = document.getElementById('modal');
+    const modalImg   = document.getElementById('modal-img');
+    const modalBox   = document.getElementById('modal-box');
+    const posterWrap = document.getElementById('poster-wrap');
 
     function openModal(id) {
       const p = POSTERS[id];
       if (!p) return;
+
+      // Show spinner while image fetches
+      posterWrap.classList.add('loading');
+
+      modalImg.onload = () => {
+        posterWrap.classList.remove('loading');
+      };
+
+      modalImg.onerror = () => {
+        posterWrap.classList.remove('loading');
+      };
+
       modalImg.src = p.src;
       modalImg.alt = p.alt;
       modal.classList.add('open');
@@ -301,7 +353,10 @@
       modal.classList.remove('open');
       modal.setAttribute('aria-hidden', 'true');
       document.body.style.overflow = '';
-      setTimeout(() => { modalImg.src = ''; }, 280);
+      setTimeout(() => {
+        modalImg.src = '';
+        posterWrap.classList.remove('loading');
+      }, 280);
     }
 
     // Zone clicks
@@ -315,7 +370,7 @@
       });
     });
 
-    // Close on backdrop click (not on modal box itself)
+    // Close on backdrop click (outside modal box)
     modal.addEventListener('click', e => {
       if (!modalBox.contains(e.target)) closeModal();
     });
@@ -324,6 +379,7 @@
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
     });
+
   </script>
 </body>
 </html>
